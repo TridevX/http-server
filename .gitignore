@@ -1,0 +1,9 @@
+tmp/
+routes/
+test-results/
+
+# editor
+*.swp
+
+.idea/
+*.iml
