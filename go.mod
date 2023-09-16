@@ -1,3 +1,3 @@
-module tridevx/http_server
+module http_server
 
 go 1.21.1
