@@ -2,16 +2,20 @@ package http_server
 
 import (
 	"net/http"
+	"github.com/tridevx/http-server/router"
 )
 
 // App represents an Express-like HTTP server.
 type App struct {
 	middleware []func(http.Handler) http.Handler
+	router     *router.Router // Add a router to the App
 }
 
 // NewApp creates a new instance of the App.
 func HttpServer() *App {
-	return &App{}
+	return &App{
+		router: router.NewRouter(),
+	}
 }
 
 // Use adds middleware to the application.
@@ -29,6 +33,10 @@ func (app *App) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	handler.ServeHTTP(w, r)
+}
+
+func (app *App) AttachRouter(customRouter *router.Router) {
+	app.router = customRouter
 }
 
 // Listen starts the HTTP server on the specified address and port.
