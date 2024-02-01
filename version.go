@@ -2,7 +2,7 @@ package http_server
 
 const (
 	// Version current TridevX version.
-	Version = "0.0.3"
+	Version = "0.0.4"
 
 	// BuildDate latest commit/release date.
 	BuildDate = "2023-06-17"

@@ -19,32 +19,34 @@ func NewRouter() *Router {
 	return &Router{}
 }
 
-func (r *Router) Get(pattern string, handler http.HandlerFunc) {
-	r.addRoute("GET", pattern, handler)
+func (r *Router) Get(pattern string, controller interface{}, methodName string) {
+	r.addRoute("GET", pattern, controller, methodName)
 }
 
-func (r *Router) Post(pattern string, handler http.HandlerFunc) {
-	r.addRoute("POST", pattern, handler)
+func (r *Router) Post(pattern string, controller interface{}, methodName string) {
+	r.addRoute("POST", pattern, controller, methodName)
 }
 
-func (r *Router) Put(pattern string, handler http.HandlerFunc) {
-	r.addRoute("PUT", pattern, handler)
+func (r *Router) Put(pattern string, controller interface{}, methodName string) {
+	r.addRoute("PUT", pattern, controller, methodName)
 }
 
-func (r *Router) Patch(pattern string, handler http.HandlerFunc) {
-	r.addRoute("PATCH", pattern, handler)
+func (r *Router) Patch(pattern string, controller interface{}, methodName string) {
+	r.addRoute("PATCH", pattern, controller, methodName)
 }
 
-func (r *Router) Delete(pattern string, handler http.HandlerFunc) {
-	r.addRoute("DELETE", pattern, handler)
+func (r *Router) Delete(pattern string, controller interface{}, methodName string) {
+	r.addRoute("DELETE", pattern, controller, methodName)
 }
 
-func (r *Router) Resource(pattern string, controller interface{}, methodName string) {
-	key := fmt.Sprintf("%s-%s", pattern, methodName)
-	r.routes[key] = func(w http.ResponseWriter, req *http.Request) {
-		callControllerMethod(controller, methodName, w, req)
-	}
+func (r *Router) Resource(pattern string, controller interface{}) {
+	r.Get(pattern, controller, "index")
+	r.Post(pattern, controller, "store")
+	r.Get(fmt.Sprintf("%s/:id", pattern), controller, "show")
+	r.Put(fmt.Sprintf("%s/:id", pattern), controller, "update")
+	r.Delete(fmt.Sprintf("%s/:id", pattern), controller, "destroy")
 }
+
 
 func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	key := fmt.Sprintf("%s-%s", req.URL.Path, req.Method)
@@ -55,17 +57,22 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	}
 }
 
-func (r *Router) addRoute(method, pattern string, handler http.HandlerFunc) {
-	r.routes[fmt.Sprintf("%s-%s", pattern, method)] = handler
+func (r *Router) addRoute(method, pattern string, controller interface{}, methodName string) {
+	key := fmt.Sprintf("%s-%s", pattern, method)
+	r.routes[key] = func(w http.ResponseWriter, req *http.Request) {
+		callControllerMethod(controller, methodName, w, req)
+	}
 }
 
+
 func callControllerMethod(controller interface{}, methodName string, w http.ResponseWriter, req *http.Request) {
-	switch c := controller.(type) {
-	case func(http.ResponseWriter, *http.Request):
-		c(w, req)
-	case http.HandlerFunc:
-		c(w, req)
-	default:
+	controllerValue := reflect.ValueOf(controller)
+	method := controllerValue.MethodByName(methodName)
+
+	if !method.IsValid() {
 		fmt.Fprintf(w, "Invalid controller method: %s", methodName)
+		return
 	}
+
+	method.Interface().(func(http.ResponseWriter, *http.Request))(w, req)
 }
