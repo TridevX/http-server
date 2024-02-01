@@ -39,42 +39,33 @@ func (r *Router) Delete(pattern string, handler http.HandlerFunc) {
 	r.addRoute("DELETE", pattern, handler)
 }
 
-func (r *Router) Resource(pattern string, controller string) {
-	r.Get(pattern, func(w http.ResponseWriter, req *http.Request) {
-		fmt.Fprintf(w, "GET %s - %s\n", pattern, controller)
-	})
-
-	r.Post(pattern, func(w http.ResponseWriter, req *http.Request) {
-		fmt.Fprintf(w, "POST %s - %s\n", pattern, controller)
-	})
-
-	r.Put(pattern, func(w http.ResponseWriter, req *http.Request) {
-		fmt.Fprintf(w, "PUT %s - %s\n", pattern, controller)
-	})
-
-	r.Patch(pattern, func(w http.ResponseWriter, req *http.Request) {
-		fmt.Fprintf(w, "PATCH %s - %s\n", pattern, controller)
-	})
-
-	r.Delete(pattern, func(w http.ResponseWriter, req *http.Request) {
-		fmt.Fprintf(w, "DELETE %s - %s\n", pattern, controller)
-	})
+func (r *Router) Resource(pattern string, controller interface{}, methodName string) {
+	key := fmt.Sprintf("%s-%s", pattern, methodName)
+	r.routes[key] = func(w http.ResponseWriter, req *http.Request) {
+		callControllerMethod(controller, methodName, w, req)
+	}
 }
 
 func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	for _, route := range r.routes {
-		if route.Method == req.Method && route.Pattern == req.URL.Path {
-			route.Handler(w, req)
-			return
-		}
+	key := fmt.Sprintf("%s-%s", req.URL.Path, req.Method)
+	if handler, ok := r.routes[key]; ok {
+		handler(w, req)
+	} else {
+		http.NotFound(w, req)
 	}
-	http.NotFound(w, req)
 }
 
 func (r *Router) addRoute(method, pattern string, handler http.HandlerFunc) {
-	r.routes = append(r.routes, Route{
-		Pattern: pattern,
-		Method:  method,
-		Handler: handler,
-	})
+	r.routes[fmt.Sprintf("%s-%s", pattern, method)] = handler
+}
+
+func callControllerMethod(controller interface{}, methodName string, w http.ResponseWriter, req *http.Request) {
+	switch c := controller.(type) {
+	case func(http.ResponseWriter, *http.Request):
+		c(w, req)
+	case http.HandlerFunc:
+		c(w, req)
+	default:
+		fmt.Fprintf(w, "Invalid controller method: %s", methodName)
+	}
 }

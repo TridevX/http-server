@@ -43,3 +43,8 @@ func (app *App) AttachRouter(customRouter *router.Router) {
 func (app *App) Listen(addr string) error {
 	return http.ListenAndServe(addr, app)
 }
+
+// Register a resource route dynamically
+func (app *App) RegisterResource(pattern string, controller interface{}, methodName string) {
+	app.router.Resource(pattern, controller, methodName)
+}
