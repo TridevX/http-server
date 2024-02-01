@@ -47,16 +47,6 @@ func (r *Router) Resource(pattern string, controller interface{}) {
 	r.Delete(fmt.Sprintf("%s/:id", pattern), controller, "destroy")
 }
 
-
-func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	key := fmt.Sprintf("%s-%s", req.URL.Path, req.Method)
-	if handler, ok := r.routes[key]; ok {
-		handler(w, req)
-	} else {
-		http.NotFound(w, req)
-	}
-}
-
 func (r *Router) addRoute(method, pattern string, controller interface{}, methodName string) {
 	key := fmt.Sprintf("%s-%s", pattern, method)
 	r.routes[key] = func(w http.ResponseWriter, req *http.Request) {
