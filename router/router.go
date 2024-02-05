@@ -68,12 +68,12 @@ func getHandlerFromController(controller interface{}, methodName string) http.Ha
 	}
 
 	// Ensure the method has the correct signature
-	methodType := method.Type()
-	if methodType.NumIn() != 2 || methodType.In(0) != reflect.TypeOf((*http.ResponseWriter)(nil)).Elem() || methodType.In(1) != reflect.TypeOf((*http.Request)(nil)).Elem() {
-		return func(w http.ResponseWriter, req *http.Request) {
-			http.Error(w, "Invalid controller method signature", http.StatusInternalServerError)
-		}
-	}
+	// methodType := method.Type()
+	// if methodType.NumIn() != 2 || methodType.In(0) != reflect.TypeOf((*http.ResponseWriter)(nil)).Elem() || methodType.In(1) != reflect.TypeOf((*http.Request)(nil)).Elem() {
+	// 	return func(w http.ResponseWriter, req *http.Request) {
+	// 		http.Error(w, "Invalid controller method signature", http.StatusInternalServerError)
+	// 	}
+	// }
 
 	return func(w http.ResponseWriter, req *http.Request) {
 		method.Call([]reflect.Value{reflect.ValueOf(w), reflect.ValueOf(req)})
