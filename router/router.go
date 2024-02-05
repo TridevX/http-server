@@ -55,7 +55,7 @@ func (r *Router) Resource(pattern string, controller interface{}) {
 // 	}
 // }
 
-func (r *Router) addRoute(method, pattern string,controller interface{}, methodName string) {
+func (r *Router) addRoute(method, pattern string, controller interface{}, methodName string) {
 	// r.routes = append(r.routes, Route{
 	// 	Pattern: pattern,
 	// 	Method:  method,
@@ -71,16 +71,22 @@ func (r *Router) addRoute(method, pattern string,controller interface{}, methodN
 	})
 }
 
-
-
 func callControllerMethod(controller interface{}, methodName string, w http.ResponseWriter, req *http.Request) {
 	controllerValue := reflect.ValueOf(controller)
 	method := controllerValue.MethodByName(methodName)
 
-	if !method.IsValid() {
-		fmt.Fprintf(w, "Invalid controller method: %s", methodName)
+	if !method.IsValid() || method.Kind() != reflect.Func {
+		http.Error(w, "Invalid controller method", http.StatusInternalServerError)
 		return
 	}
 
-	method.Interface().(func(http.ResponseWriter, *http.Request))(w, req)
+	// Ensure the method has the correct signature
+	methodType := method.Type()
+	if methodType.NumIn() != 2 || methodType.In(0) != reflect.TypeOf((*http.ResponseWriter)(nil)).Elem() || methodType.In(1) != reflect.TypeOf((*http.Request)(nil)).Elem() {
+		http.Error(w, "Invalid controller method signature", http.StatusInternalServerError)
+		return
+	}
+
+	// method.Interface().(func(http.ResponseWriter, *http.Request))(w, req)
+	method.Call([]reflect.Value{reflect.ValueOf(w), reflect.ValueOf(req)})
 }

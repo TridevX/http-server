@@ -2,6 +2,7 @@ package http_server
 
 import (
 	"net/http"
+
 	"github.com/tridevx/http-server/router"
 )
 
@@ -14,7 +15,8 @@ type App struct {
 // NewApp creates a new instance of the App.
 func HttpServer() *App {
 	return &App{
-		router: router.NewRouter(),
+		middleware: make([]func(http.Handler) http.Handler, 0),
+		router:     router.NewRouter(), // Initialize the router here
 	}
 }
 
