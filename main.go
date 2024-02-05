@@ -9,14 +9,14 @@ import (
 // App represents an Express-like HTTP server.
 type App struct {
 	middleware []func(http.Handler) http.Handler
-	router     *router.Router // Add a router to the App
+	Router     *router.Router // Add a router to the App
 }
 
 // NewApp creates a new instance of the App.
 func HttpServer() *App {
 	return &App{
 		middleware: make([]func(http.Handler) http.Handler, 0),
-		router:     router.NewRouter(), // Initialize the router here
+		Router:     router.NewRouter(), // Initialize the router here
 	}
 }
 
@@ -38,7 +38,7 @@ func (app *App) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *App) AttachRouter(customRouter *router.Router) {
-	app.router = customRouter
+	app.Router = customRouter
 }
 
 // Listen starts the HTTP server on the specified address and port.
