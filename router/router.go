@@ -16,6 +16,11 @@ type Router struct {
 	routes []Route
 }
 
+// ServeHTTP implements http.Handler.
+func (*Router) ServeHTTP(http.ResponseWriter, *http.Request) {
+	panic("unimplemented")
+}
+
 func NewRouter() *Router {
 	return &Router{}
 }
