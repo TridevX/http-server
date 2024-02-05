@@ -41,11 +41,11 @@ func (r *Router) Delete(pattern string, controller interface{}, methodName strin
 }
 
 func (r *Router) Resource(pattern string, controller interface{}) {
-	r.Get(pattern, controller, "index")
-	r.Post(pattern, controller, "store")
-	r.Get(fmt.Sprintf("%s/:id", pattern), controller, "show")
-	r.Put(fmt.Sprintf("%s/:id", pattern), controller, "update")
-	r.Delete(fmt.Sprintf("%s/:id", pattern), controller, "destroy")
+	r.Get(pattern, controller, "Index")
+	r.Post(pattern, controller, "Store")
+	r.Get(fmt.Sprintf("%s/:id", pattern), controller, "Show")
+	r.Put(fmt.Sprintf("%s/:id", pattern), controller, "Update")
+	r.Delete(fmt.Sprintf("%s/:id", pattern), controller, "Destroy")
 }
 
 func (r *Router) addRoute(method, pattern string, controller interface{}, methodName string) {
