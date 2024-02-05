@@ -47,12 +47,29 @@ func (r *Router) Resource(pattern string, controller interface{}) {
 	r.Delete(fmt.Sprintf("%s/:id", pattern), controller, "destroy")
 }
 
-func (r *Router) addRoute(method, pattern string, controller interface{}, methodName string) {
-	key := fmt.Sprintf("%s-%s", pattern, method)
-	r.routes[key] = func(w http.ResponseWriter, req *http.Request) {
-		callControllerMethod(controller, methodName, w, req)
-	}
+// func (r *Router) addRoute(method, pattern string, controller interface{}, methodName string) {
+// 	key := fmt.Sprintf("%s-%s", pattern, method)
+// 	r.routes[key] = func(w http.ResponseWriter, req *http.Request) {
+// 		callControllerMethod(controller, methodName, w, req)
+// 	}
+// }
+
+func (r *Router) addRoute(method, pattern string,controller interface{}, methodName string) {
+	// r.routes = append(r.routes, Route{
+	// 	Pattern: pattern,
+	// 	Method:  method,
+	// 	Handler: handler,
+	// })
+
+	r.routes = append(r.routes, Route{
+		Pattern: pattern,
+		Method:  method,
+		Handler: func(w http.ResponseWriter, req *http.Request) {
+			callControllerMethod(controller, methodName, w, req)
+		},
+	})
 }
+
 
 
 func callControllerMethod(controller interface{}, methodName string, w http.ResponseWriter, req *http.Request) {
