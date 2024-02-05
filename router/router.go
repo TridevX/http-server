@@ -13,12 +13,7 @@ type Route struct {
 }
 
 type Router struct {
-	routes []Route
-}
-
-// ServeHTTP implements http.Handler.
-func (*Router) ServeHTTP(http.ResponseWriter, *http.Request) {
-	panic("unimplemented")
+	Routes []Route
 }
 
 func NewRouter() *Router {
@@ -53,45 +48,34 @@ func (r *Router) Resource(pattern string, controller interface{}) {
 	r.Delete(fmt.Sprintf("%s/:id", pattern), controller, "destroy")
 }
 
-// func (r *Router) addRoute(method, pattern string, controller interface{}, methodName string) {
-// 	key := fmt.Sprintf("%s-%s", pattern, method)
-// 	r.routes[key] = func(w http.ResponseWriter, req *http.Request) {
-// 		callControllerMethod(controller, methodName, w, req)
-// 	}
-// }
-
 func (r *Router) addRoute(method, pattern string, controller interface{}, methodName string) {
-	// r.routes = append(r.routes, Route{
-	// 	Pattern: pattern,
-	// 	Method:  method,
-	// 	Handler: handler,
-	// })
-
-	r.routes = append(r.routes, Route{
+	handlerFunc := getHandlerFromController(controller, methodName)
+	r.Routes = append(r.Routes, Route{
 		Pattern: pattern,
 		Method:  method,
-		Handler: func(w http.ResponseWriter, req *http.Request) {
-			callControllerMethod(controller, methodName, w, req)
-		},
+		Handler: handlerFunc,
 	})
 }
 
-func callControllerMethod(controller interface{}, methodName string, w http.ResponseWriter, req *http.Request) {
+func getHandlerFromController(controller interface{}, methodName string) http.HandlerFunc {
 	controllerValue := reflect.ValueOf(controller)
 	method := controllerValue.MethodByName(methodName)
 
 	if !method.IsValid() || method.Kind() != reflect.Func {
-		http.Error(w, "Invalid controller method", http.StatusInternalServerError)
-		return
+		return func(w http.ResponseWriter, req *http.Request) {
+			http.Error(w, "Invalid controller method", http.StatusInternalServerError)
+		}
 	}
 
 	// Ensure the method has the correct signature
 	methodType := method.Type()
 	if methodType.NumIn() != 2 || methodType.In(0) != reflect.TypeOf((*http.ResponseWriter)(nil)).Elem() || methodType.In(1) != reflect.TypeOf((*http.Request)(nil)).Elem() {
-		http.Error(w, "Invalid controller method signature", http.StatusInternalServerError)
-		return
+		return func(w http.ResponseWriter, req *http.Request) {
+			http.Error(w, "Invalid controller method signature", http.StatusInternalServerError)
+		}
 	}
 
-	// method.Interface().(func(http.ResponseWriter, *http.Request))(w, req)
-	method.Call([]reflect.Value{reflect.ValueOf(w), reflect.ValueOf(req)})
+	return func(w http.ResponseWriter, req *http.Request) {
+		method.Call([]reflect.Value{reflect.ValueOf(w), reflect.ValueOf(req)})
+	}
 }
